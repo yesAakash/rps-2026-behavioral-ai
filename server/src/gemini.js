@@ -1,35 +1,56 @@
 const { VertexAI } = require('@google-cloud/vertexai');
 const { deterministicFallback, summarizeHistory } = require('./behavior');
-const { getCounterMove, getRandomMove } = require('./game');
+const { MOVES } = require('./constants');
 
-// Initialize Vertex AI
-const project = process.env.GCP_PROJECT_ID || 'your-project-id';
-const location = 'us-central1';
-const vertexAI = new VertexAI({ project: project, location: location });
+// Configuration
+const PROJECT_ID = process.env.GCP_PROJECT_ID;
+const LOCATION = process.env.GCP_LOCATION || 'us-central1';
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
-// Using Flash for speed/cost efficiency
-const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// Initialize Vertex AI Client
+let model = null;
+if (PROJECT_ID) {
+    try {
+        const vertexAI = new VertexAI({ project: PROJECT_ID, location: LOCATION });
+        model = vertexAI.getGenerativeModel({ model: MODEL_NAME });
+    } catch (e) {
+        console.warn("Failed to initialize Vertex AI client:", e.message);
+    }
+} else {
+    console.warn("GCP_PROJECT_ID not set. Vertex AI disabled.");
+}
 
+/**
+ * Main function to get AI decision.
+ * Wraps Vertex AI call with fallback logic.
+ */
 async function getAiDecision(context) {
-  const { history, stats, personality, difficulty } = context;
+  // 1. Fallback if client is missing
+  if (!model) {
+      return deterministicFallback(context.history);
+  }
 
+  const { history, stats, personality, difficulty } = context;
   const summary = summarizeHistory(history);
   
   const systemPrompt = `
-    You are a Rock Paper Scissors game AI. 
-    Your goal: Predict the player's NEXT move based on history and provide a JSON response.
+    You are a Rock Paper Scissors AI.
+    Context:
+    - Personality: ${personality}
+    - Difficulty: ${difficulty}
+    - Stats: Wins ${stats.wins}, Losses ${stats.losses}
+    - History: ${summary}
     
-    Personality: ${personality} (Adjust explanation tone).
-    Current Stats: Player Wins ${stats.wins}, Losses ${stats.losses}.
-    History: ${summary}
-
-    Return strict JSON:
+    Predict the player's NEXT move.
+    Output STRICT JSON only (no markdown).
+    
+    Schema:
     {
       "predicted_player_move": "rock|paper|scissors",
-      "prediction_confidence": number (0-100),
-      "player_style": "pattern|rock-biased|paper-biased|scissors-biased|reactive-to-loss|random",
-      "explanation": "short explanation 1 sentence",
-      "coach_tip": "short improvement tip"
+      "prediction_confidence": 0-100,
+      "player_style": "string",
+      "explanation": "string",
+      "coach_tip": "string"
     }
   `;
 
@@ -40,14 +61,14 @@ async function getAiDecision(context) {
     });
 
     const response = result.response;
+    if (!response.candidates || !response.candidates[0]) throw new Error("No candidates");
+    
     const text = response.candidates[0].content.parts[0].text;
+    const data = parseGeminiJson(text); // Use helper for safety
     
-    // Parse JSON
-    const data = JSON.parse(text);
-    
-    // Validate AI didn't hallucinate invalid moves
-    if (!['rock','paper','scissors'].includes(data.predicted_player_move)) {
-        throw new Error("Invalid move predicted");
+    // Validate structural integrity of response
+    if (!Object.values(MOVES).includes(data.predicted_player_move)) {
+        throw new Error("Invalid move predicted by AI");
     }
 
     return {
@@ -59,9 +80,20 @@ async function getAiDecision(context) {
     };
 
   } catch (error) {
-    console.error("Gemini Error:", error.message);
+    console.error("Gemini/Vertex Error:", error.message);
     return deterministicFallback(history);
   }
 }
 
-module.exports = { getAiDecision };
+/**
+ * Helper to safely parse JSON from LLM output, handling Code Block fences.
+ * Exported for testing.
+ */
+function parseGeminiJson(text) {
+    if (!text) throw new Error("Empty response text");
+    // Remove Markdown code blocks if present (common LLM behavior)
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned);
+}
+
+module.exports = { getAiDecision, parseGeminiJson };

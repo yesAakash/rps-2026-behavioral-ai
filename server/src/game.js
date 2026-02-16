@@ -1,26 +1,43 @@
+const { MOVES, WINNER } = require('./constants');
+
+/**
+ * Determines the winner of a round.
+ * @param {string} pMove - Player's move
+ * @param {string} aiMove - AI's move
+ * @returns {string} - 'player', 'ai', or 'draw'
+ */
 function determineWinner(pMove, aiMove) {
-  if (pMove === aiMove) return 'draw';
+  if (pMove === aiMove) return WINNER.DRAW;
   if (
-    (pMove === 'rock' && aiMove === 'scissors') ||
-    (pMove === 'paper' && aiMove === 'rock') ||
-    (pMove === 'scissors' && aiMove === 'paper')
+    (pMove === MOVES.ROCK && aiMove === MOVES.SCISSORS) ||
+    (pMove === MOVES.PAPER && aiMove === MOVES.ROCK) ||
+    (pMove === MOVES.SCISSORS && aiMove === MOVES.PAPER)
   ) {
-    return 'player';
+    return WINNER.PLAYER;
   }
-  return 'ai';
+  return WINNER.AI;
 }
 
-function getCounterMove(predictedMove) {
+/**
+ * Returns the winning move against the input.
+ * @param {string} move 
+ * @returns {string}
+ */
+function getCounterMove(move) {
   const map = {
-    'rock': 'paper',
-    'paper': 'scissors',
-    'scissors': 'rock'
+    [MOVES.ROCK]: MOVES.PAPER,
+    [MOVES.PAPER]: MOVES.SCISSORS,
+    [MOVES.SCISSORS]: MOVES.ROCK
   };
-  return map[predictedMove] || 'rock';
+  return map[move] || MOVES.ROCK;
 }
 
+/**
+ * Returns a random valid move.
+ * @returns {string}
+ */
 function getRandomMove() {
-  const moves = ['rock', 'paper', 'scissors'];
+  const moves = Object.values(MOVES);
   return moves[Math.floor(Math.random() * moves.length)];
 }
 

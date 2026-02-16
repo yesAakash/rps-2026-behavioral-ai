@@ -5,6 +5,21 @@ A modern Rock-Paper-Scissors web app that uses Google Vertex AI (Gemini) to anal
 ## Vertical & Persona
 **Game + Behavioral Assistant**: The AI acts not just as an opponent, but as an analyzer that adapts its difficulty (probability of using the optimal counter vs random) based on player performance streaks.
 
+## Google Services Used
+- **Google Cloud Run**: Serverless deployment for the Node.js backend.
+- **Vertex AI (Gemini 1.5 Flash)**: Generates behavioral analysis, prediction, and natural language explanations.
+- **Service Account**: Used for secure, keyless authentication (ADC).
+
+## Test Plan
+This project uses `node:test` for lightweight, dependency-free unit testing.
+Run tests: `cd server && npm test`
+
+**Coverage:**
+1. **Game Logic**: Verifies winner determination (Rock vs Scissors = Player, etc.) and counter-move logic.
+2. **Validation**: Ensures API rejects invalid moves, large history arrays, and malformed stats.
+3. **Difficulty Scaling**: Tests streak thresholds (2 wins -> Hard, 2 losses -> Easy).
+4. **Vertex AI Integration**: Tests JSON parsing safety and ensures fallback logic triggers correctly when AI output is malformed or unavailable.
+
 ## How it Works
 1. **Frontend**: Stores session history/stats in `localStorage`. Sends play data to backend.
 2. **Backend (Node.js)**: 
@@ -20,10 +35,6 @@ A modern Rock-Paper-Scissors web app that uses Google Vertex AI (Gemini) to anal
 3. Set environment variable: `export GCP_PROJECT_ID=your-project-id` (Needs ADC or Service Account locally)
 4. `npm start`
 5. Open `http://localhost:8080`
-
-## Tests
-Run unit tests for logic and validation:
-`cd server && npm test`
 
 ## Deployment (Cloud Run)
 1. Build container:

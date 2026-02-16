@@ -1,6 +1,13 @@
-const VALID_MOVES = ['rock', 'paper', 'scissors'];
-const VALID_PERSONALITIES = ['Friendly', 'Competitive', 'Coach'];
+const { MOVES, PERSONALITY } = require('./constants');
 
+const VALID_MOVES = Object.values(MOVES);
+const VALID_PERSONALITIES = Object.values(PERSONALITY);
+
+/**
+ * Validates the incoming play request body.
+ * @param {object} body 
+ * @returns {object} { valid: boolean, error?: string }
+ */
 function validatePlayRequest(body) {
   const { playerMove, history, stats, personality } = body;
 
@@ -12,7 +19,7 @@ function validatePlayRequest(body) {
     return { valid: false, error: 'History must be an array' };
   }
 
-  // Limit history size for safety/token usage
+  // Security: Limit history size
   if (history.length > 50) {
     return { valid: false, error: 'History array too large' };
   }
@@ -21,11 +28,13 @@ function validatePlayRequest(body) {
     return { valid: false, error: 'Invalid stats object' };
   }
 
-  if (!VALID_PERSONALITIES.includes(personality)) {
-    return { valid: false, error: 'Invalid personality' };
+  // Allow fallback if personality is missing/invalid, or enforce strictly?
+  // Let's enforce strictly to ensure data quality.
+  if (personality && !VALID_PERSONALITIES.includes(personality)) {
+      return { valid: false, error: 'Invalid personality' };
   }
 
   return { valid: true };
 }
 
-module.exports = { validatePlayRequest, VALID_MOVES };
+module.exports = { validatePlayRequest };

@@ -4,92 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPS 2026 - Behavioral AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-glow"></div>
-    <div class="app-container">
-        <header>
-            <h1>RPS <span class="year">2026</span></h1>
-            <p class="subtitle">BEHAVIORAL PREDICTION ENGINE</p>
-        </header>
-
-        <main>
-            <!-- Controls -->
-            <div class="controls-bar glass-panel">
-                <div class="control-group">
-                    <label for="personality">AI PERSONALITY</label>
-                    <select id="personality" onchange="window.updatePersonality()">
-                        <option value="Friendly">FRIENDLY</option>
-                        <option value="Competitive">COMPETITIVE</option>
-                        <option value="Coach">COACH</option>
+    <div class="app-wrapper">
+        <!-- Main Game Area -->
+        <main class="game-section">
+            <header class="top-bar">
+                <div class="controls-left">
+                    <label for="personality">AI Personality</label>
+                    <select id="personality" onchange="window.updatePersonality()" aria-label="Select AI Personality">
+                        <option value="Friendly">Friendly</option>
+                        <option value="Competitive">Competitive</option>
+                        <option value="Coach" selected>Coach</option>
                     </select>
                 </div>
-                <div class="control-group">
-                    <span class="label">DIFFICULTY</span>
-                    <span id="difficulty-badge" class="badge medium">MED</span>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="stats-panel glass-panel">
-                <div class="stat-box">
-                    <span class="stat-label">WINS</span>
-                    <span id="score-wins" class="stat-value text-success">0</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">LOSSES</span>
-                    <span id="score-losses" class="stat-value text-danger">0</span>
-                </div>
-                <div class="stat-box wide">
-                    <span class="stat-label">STYLE</span>
-                    <span id="style-label" class="stat-value small text-primary">ANALYZING...</span>
-                </div>
-            </div>
-
-            <!-- Prediction -->
-            <div class="prediction-area" aria-live="polite">
-                <div id="prediction-text" class="prediction-text hidden">
-                    PREDICTION: <span id="pred-move" class="glow-text">...</span> 
-                    <span class="confidence-pill"><span id="pred-conf">0</span>% CONFIDENCE</span>
-                </div>
-            </div>
-
-            <!-- Game Area -->
-            <div class="game-area">
-                <div class="choices">
-                    <button class="choice-btn rock" onclick="window.play('rock')" aria-label="Play Rock">
-                        <span class="emoji">🪨</span> <span class="label">ROCK</span>
+                <div class="controls-right">
+                    <button id="btn-sound" class="btn-sound" onclick="window.toggleSound()">
+                        <span class="icon">🔊</span> ON
                     </button>
-                    <button class="choice-btn paper" onclick="window.play('paper')" aria-label="Play Paper">
-                        <span class="emoji">📄</span> <span class="label">PAPER</span>
-                    </button>
-                    <button class="choice-btn scissors" onclick="window.play('scissors')" aria-label="Play Scissors">
-                        <span class="emoji">✂️</span> <span class="label">SCISSORS</span>
-                    </button>
+                    <span class="label">Diff:</span>
+                    <span id="difficulty-badge" class="badge medium" aria-live="polite">MEDIUM</span>
+                </div>
+            </header>
+
+            <div class="game-board">
+                <div class="header-titles">
+                    <h1>RPS <span class="accent-text">2026</span></h1>
+                    <p class="subtitle">Behavioral AI Opponent</p>
+                </div>
+
+                <!-- AI Thinking/Prediction Status -->
+                <div class="prediction-card">
+                    <div class="pred-header">AI Prediction Engine</div>
+                    <div id="prediction-status" class="pred-status" aria-live="polite">Waiting for player...</div>
+                    <div id="prediction-detail" class="pred-detail hidden">
+                        Confidence: <span id="pred-conf">0</span>%
+                    </div>
+                </div>
+
+                <!-- Battle Arena -->
+                <div class="arena">
+                    <div class="player-side">
+                        <h3 class="side-label">You</h3>
+                        <div class="choices-grid">
+                            <button class="choice-btn" onclick="window.play('rock')" aria-label="Play Rock (R)">
+                                <span class="emoji">🪨</span>
+                            </button>
+                            <button class="choice-btn" onclick="window.play('paper')" aria-label="Play Paper (P)">
+                                <span class="emoji">✋</span>
+                            </button>
+                            <button class="choice-btn" onclick="window.play('scissors')" aria-label="Play Scissors (S)">
+                                <span class="emoji">✌️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="vs-marker" aria-hidden="true">VS</div>
+
+                    <div class="ai-side">
+                        <h3 class="side-label">AI Opponent</h3>
+                        <div class="ai-avatar-container">
+                            <div id="ai-move-display" class="ai-move-placeholder" aria-label="AI Move Placeholder">
+                                <span class="emoji">🤖</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Overlay -->
+                <div id="result-card" class="result-card hidden" aria-live="assertive" role="alert">
+                    <h2 id="result-title">Draw!</h2>
+                    <p id="ai-explanation" class="explanation">AI is analyzing your patterns...</p>
+                    <div id="coach-tip-container" class="coach-tip hidden">
+                        <strong>Coach Tip:</strong> <span id="coach-tip-text"></span>
+                    </div>
                 </div>
             </div>
-
-            <!-- Result -->
-            <div id="result-card" class="result-card glass-panel hidden" aria-live="assertive">
-                <h2 id="result-title">YOU WON</h2>
-                <div class="move-comparison">
-                    <div class="move-slot"><span class="slot-label">YOU</span><span id="res-player" class="slot-emoji"></span></div>
-                    <div class="vs-divider">VS</div>
-                    <div class="move-slot"><span class="slot-label">AI</span><span id="res-ai" class="slot-emoji"></span></div>
-                </div>
-                <div class="explanation-box">
-                    <p id="ai-explanation">...</p>
-                </div>
-                <div id="coach-tip" class="coach-tip hidden">
-                    <span class="tip-icon">💡</span> <span id="tip-text"></span>
-                </div>
-            </div>
-
-            <button class="btn-reset" onclick="window.resetGame()">RESET SYSTEM</button>
         </main>
+
+        <!-- Sidebar Stats -->
+        <aside class="stats-sidebar">
+            <div class="stats-header">
+                <h3>Session Stats</h3>
+            </div>
+            
+            <div class="stats-list">
+                <div class="stat-row">
+                    <span class="stat-label">Wins</span>
+                    <span id="score-wins" class="stat-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Losses</span>
+                    <span id="score-losses" class="stat-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Draws</span>
+                    <span id="score-draws" class="stat-value">0</span>
+                </div>
+                <div class="stat-separator"></div>
+                <div class="stat-row">
+                    <span class="stat-label">Streak</span>
+                    <span id="streak-val" class="stat-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Style</span>
+                    <span id="style-val" class="stat-value text-accent">RANDOM</span>
+                </div>
+            </div>
+
+            <button class="reset-link" onclick="window.resetGame()">Reset Session</button>
+        </aside>
     </div>
+    
+    <!-- Core JS -->
     <script src="app.js"></script>
 </body>
 </html>
