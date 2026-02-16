@@ -1,0 +1,19 @@
+{
+  "name": "rps-2026-server",
+  "version": "1.0.0",
+  "description": "Behavioral AI Backend for RPS 2026",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "@google-cloud/vertexai": "^1.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPS 2026 - Vision Behavioral AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div class="background-glow"></div>
+    <div class="app-container">
+        <header>
+            <h1>RPS <span class="year">2026</span></h1>
+            <div class="subtitle-container">
+                <p class="subtitle">VISION BEHAVIORAL AI</p>
+                <span class="version-badge">SYS.V2.0</span>
+            </div>
+        </header>
+
+        <!-- Vision HUD -->
+        <div id="vision-container" class="vision-container hidden">
+            <video id="webcam-feed" autoplay playsinline muted></video>
+            <div class="vision-overlay">
+                <div class="hud-corners"></div>
+                <div class="scan-line"></div>
+                <div class="hud-row top">
+                    <div class="hud-stat"><span class="hud-label">SENSORS</span> <span class="hud-val">ONLINE</span></div>
+                    <div class="rec-dot"></div>
+                </div>
+                <div class="hud-row bottom">
+                    <div class="hud-stat">EMOTION: <span id="hud-emotion" class="hud-val text-accent">CALIBRATING</span></div>
+                    <div class="hud-stat">MVMNT: <span id="hud-movement" class="hud-val">0%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onboarding Modal -->
+        <div id="onboarding" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <h2>NEURAL LINK SETUP</h2>
+                <p>To calibrate the prediction model, define your playstyle:</p>
+                <p class="highlight-text">Do you play randomly or with a strategy?</p>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="window.setStrategy('Randomly')">RANDOMLY</button>
+                    <button class="btn-secondary" onclick="window.setStrategy('Strategy')">STRATEGY</button>
+                </div>
+            </div>
+        </div>
+
+        <main>
+            <!-- Controls Bar -->
+            <div class="controls-bar glass-panel">
+                <div class="control-group">
+                    <label for="personality">PERSONALITY MOOD</label>
+                    <div class="select-wrapper">
+                        <select id="personality" onchange="window.updatePersonality()">
+                            <option value="Friendly">FRIENDLY</option>
+                            <option value="Competitive">COMPETITIVE</option>
+                            <option value="Coach">COACH MODE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control-group center">
+                    <button id="btn-vision" class="btn-vision" onclick="window.toggleVision()">
+                        <span class="icon-eye">👁‍🗨</span> VISION
+                    </button>
+                </div>
+                <div class="control-group">
+                    <span class="label">DIFFICULTY</span>
+                    <span id="difficulty-badge" class="badge medium">MED</span>
+                </div>
+            </div>
+
+            <!-- Mind Game Alert Banner -->
+            <div id="mind-game-banner" class="mind-game-banner hidden glass-panel" aria-live="assertive">
+                <div class="glitch-wrapper">
+                    <span class="alert-icon">⚠️</span>
+                    <span id="mind-game-text">MIND GAME DETECTED</span>
+                </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="stats-panel glass-panel">
+                <div class="stat-box">
+                    <span class="stat-label">WINS</span>
+                    <span id="score-wins" class="stat-value text-success">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">LOSSES</span>
+                    <span id="score-losses" class="stat-value text-danger">0</span>
+                </div>
+                <div class="stat-box wide">
+                    <span class="stat-label">BEHAVIOR PROFILE</span>
+                    <span id="style-label" class="stat-value small text-primary">SCANNING...</span>
+                </div>
+            </div>
+
+            <!-- Prediction Display -->
+            <div class="prediction-area" aria-live="polite">
+                <div id="prediction-text" class="prediction-text hidden">
+                    PREDICTION: <span id="pred-move" class="glow-text">...</span> <span class="confidence-pill"><span id="pred-conf">0</span>% CONFIDENCE</span>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area">
+                <div class="choices">
+                    <button class="choice-btn rock" onclick="window.play('rock')" aria-label="Play Rock">
+                        <span class="emoji">🪨</span>
+                        <span class="label">ROCK</span>
+                    </button>
+                    <button class="choice-btn paper" onclick="window.play('paper')" aria-label="Play Paper">
+                        <span class="emoji">📄</span>
+                        <span class="label">PAPER</span>
+                    </button>
+                    <button class="choice-btn scissors" onclick="window.play('scissors')" aria-label="Play Scissors">
+                        <span class="emoji">✂️</span>
+                        <span class="label">SCISSORS</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Card -->
+            <div id="result-card" class="result-card glass-panel hidden" aria-live="assertive">
+                <div class="result-header">
+                    <h2 id="result-title">YOU WON</h2>
+                </div>
+                <div class="move-comparison">
+                    <div class="move-slot player">
+                        <span class="slot-label">YOU</span>
+                        <span id="res-player" class="slot-emoji">🪨</span>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="move-slot ai">
+                        <span class="slot-label">AI</span>
+                        <span id="res-ai" class="slot-emoji">✂️</span>
+                    </div>
+                </div>
+                <div class="explanation-box">
+                    <p id="ai-explanation">...</p>
+                </div>
+                <div id="coach-tip" class="coach-tip hidden">
+                    <span class="tip-icon">💡</span> <span id="tip-text"></span>
+                </div>
+            </div>
+            
+            <button class="btn-reset" onclick="window.resetGame()">RESET SYSTEM</button>
+        </main>
+    </div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
